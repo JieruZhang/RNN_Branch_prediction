@@ -59,7 +59,8 @@ def run_epoch(session, m, data, data_loader, eval_op, verbose=False):
     start_time = time.time()
     costs = 0.0
     iters = 0
-    state = m.initial_lm_state.eval()
+    #state = m.initial_lm_state.eval()
+    state = tf.get_default_session().run(m.initial_lm_state)
     for step, (x, y) in enumerate(data_loader.data_iterator(data, m.batch_size, m.num_steps)):
         cost, state, _ = session.run([m.cost, m.final_state, eval_op],
                                      {m.input_data: x,
@@ -116,8 +117,8 @@ def train(args):
             mdev = lm_model(args, is_training=False)
 
         # save only the last model
-        saver = tf.train.Saver(tf.all_variables(), max_to_keep=1)
-        tf.initialize_all_variables().run()
+        saver = tf.train.Saver(tf.global_variables(), max_to_keep=1)
+        tf.global_variables_initializer().run()
         dev_pp = 10000000.0
 
         # process each epoch
