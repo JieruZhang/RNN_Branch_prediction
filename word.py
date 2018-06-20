@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# Author: Clara Vania
 
 import tensorflow as tf
 
@@ -47,7 +46,7 @@ class WordLM(object):
         if is_training and args.keep_prob < 1:
             cell = tf.nn.rnn_cell.DropoutWrapper(cell, output_keep_prob=args.keep_prob)
         lm_cell = tf.nn.rnn_cell.MultiRNNCell([cell] * args.num_layers)
-
+        #initialize the state to zero
         self._initial_lm_state = lm_cell.zero_state(batch_size, tf.float32)
 
         with tf.device("/cpu:0"):
@@ -69,6 +68,7 @@ class WordLM(object):
         softmax_b = tf.get_variable("softmax_b", [out_vocab_size])
 
         logits = tf.matmul(lm_outputs, softmax_w) + softmax_b
+        self._out_probs = tf.nn.softmax(logits)
 
         # compute log perplexity
         loss = tf.contrib.legacy_seq2seq.sequence_loss_by_example(
@@ -123,3 +123,7 @@ class WordLM(object):
     @property
     def train_op(self):
         return self._train_op
+    
+    @property
+    def out_probs(self):
+        return self._out_probs

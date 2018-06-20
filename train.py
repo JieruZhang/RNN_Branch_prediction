@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# Author: Clara Vania
 
 import numpy as np
 import tensorflow as tf
@@ -14,9 +13,9 @@ from word import WordLM
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--train_file', type=str, default='data/tinyshakespeare/train.txt',
+    parser.add_argument('--train_file', type=str, default='data/trace/temp_train.txt',
                         help="training data")
-    parser.add_argument('--dev_file', type=str, default='data/tinyshakespeare/dev.txt',
+    parser.add_argument('--dev_file', type=str, default='data/trace/temp_dev.txt',
                         help="development data")
     parser.add_argument('--output', '-o', type=str, default='train.log',
                         help='output file')
@@ -28,7 +27,7 @@ def main():
                         help='number of layers in the RNN')
     parser.add_argument('--model', type=str, default='lstm',
                         help='rnn, gru, or lstm')
-    parser.add_argument('--batch_size', type=int, default=20,
+    parser.add_argument('--batch_size', type=int, default=10,
                         help='minibatch size')
     parser.add_argument('--num_steps', type=int, default=20,
                         help='RNN sequence length')
@@ -87,7 +86,7 @@ def train(args):
 
     with open(os.path.join(args.save_dir, 'config.pkl'), 'wb') as f:
         cPickle.dump(args, f)
-
+    #load data
     data_loader = TextLoader(args)
     train_data = data_loader.train_data
     dev_data = data_loader.dev_data
@@ -96,6 +95,7 @@ def train(args):
     fout = codecs.open(out_file, "w", encoding="UTF-8")
 
     args.word_vocab_size = data_loader.word_vocab_size
+    args.out_vocab_size = data_loader.word_vocab_size
     print ("Word vocab size: " + str(data_loader.word_vocab_size) + "\n")
     fout.write("Word vocab size: " + str(data_loader.word_vocab_size) + "\n")
 

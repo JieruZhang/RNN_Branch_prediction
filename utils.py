@@ -1,6 +1,5 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# Author: Clara Vania
 
 from __future__ import unicode_literals, division
 import numpy as np
@@ -53,7 +52,7 @@ class TextLoader:
             cPickle.dump((self.word_to_id, self.unk_word_list), f)
 
     def load_preprocessed(self):
-        with codecs.open(self.words_vocab_file) as f:
+        with codecs.open(self.words_vocab_file, 'rb') as f:
             self.word_to_id, self.unk_word_list = cPickle.load(f)
             self.word_vocab_size = len(self.word_to_id)
 
