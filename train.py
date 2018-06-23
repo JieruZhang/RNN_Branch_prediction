@@ -13,15 +13,15 @@ from word import WordLM
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--train_file', type=str, default='data/trace/temp_train.txt',
+    parser.add_argument('--train_file', type=str, default='data/trace/train.txt',
                         help="training data")
-    parser.add_argument('--dev_file', type=str, default='data/trace/temp_dev.txt',
+    parser.add_argument('--dev_file', type=str, default='data/trace/dev.txt',
                         help="development data")
     parser.add_argument('--output', '-o', type=str, default='train.log',
                         help='output file')
-    parser.add_argument('--save_dir', type=str, default='model',
+    parser.add_argument('--save_dir', type=str, default='model_test',
                         help='directory to store checkpointed models')
-    parser.add_argument('--rnn_size', type=int, default=200,
+    parser.add_argument('--rnn_size', type=int, default=30,
                         help='size of RNN hidden state')
     parser.add_argument('--num_layers', type=int, default=2,
                         help='number of layers in the RNN')
@@ -29,11 +29,11 @@ def main():
                         help='rnn, gru, or lstm')
     parser.add_argument('--batch_size', type=int, default=10,
                         help='minibatch size')
-    parser.add_argument('--num_steps', type=int, default=20,
+    parser.add_argument('--num_steps', type=int, default=15,
                         help='RNN sequence length')
     parser.add_argument('--out_vocab_size', type=int, default=10000,
                         help='size of output vocabulary')
-    parser.add_argument('--num_epochs', type=int, default=3,
+    parser.add_argument('--num_epochs', type=int, default=5,
                         help='number of epochs')
     parser.add_argument('--validation_interval', type=int, default=1,
                         help='validation interval')
@@ -72,7 +72,7 @@ def run_epoch(session, m, data, data_loader, eval_op, verbose=False):
             print("%.3f perplexity: %.3f speed: %.0f wps" %
                   (step * 1.0 / epoch_size, np.exp(costs / iters),
                    iters * m.batch_size / (time.time() - start_time)))
-
+    print("Training time for this epoch: {}".format(time.time() - start_time))
     return np.exp(costs / iters)
 
 

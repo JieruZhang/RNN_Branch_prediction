@@ -12,9 +12,9 @@ from itertools import groupby
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--test_file', type=str, default='data/trace/temp_test.txt',
+    parser.add_argument('--test_file', type=str, default='data/trace/test.txt',
                         help="test file")
-    parser.add_argument('--save_dir', type=str, default='model',
+    parser.add_argument('--save_dir', type=str, default='model_test',
                         help='directory of the checkpointed models')
     args = parser.parse_args()
     test(args)
@@ -44,50 +44,43 @@ def findlastword(test_file):
     return data
 
 def process_testset(test_file):
-    temp_test = open('test_lack_1word.txt','w')
     sentence_length = 0
     with open(test_file, 'r') as f: 
         for line in f:
-            line = line.strip()
-            line = line.lower()
-            sentence_length = len(line.split())-1
-            for i in range(len(line.split())):
-                if i == len(line.split())-1:
-                    break
-                else:
-                    temp_test.write(line.split()[i])
-                    temp_test.write(' ')
-            temp_test.write('\n')
-    temp_test.close()
+            sentence_length = len(line.split()) + 1
     return sentence_length
     
 def run_epoch2(session, m, data, data_loader, eval_op, test_file,sentence_length):
     iters = 0
+    costs = 0.0
     acc = 0.0
     predict_index = list()
-    probs_list = list()
     state = tf.get_default_session().run(m.initial_lm_state)
     
     for step, (x, y) in enumerate(data_loader.data_iterator(data, m.batch_size, m.num_steps)):
-        probas, state, _ = session.run([m.out_probs, m.final_state, eval_op],
+        cost, probas, state, _ = session.run([m.cost, m.out_probs, m.final_state, eval_op],
                                      {m.input_data: x,
                                       m.targets: y,
                                       m.initial_lm_state: state})
-        iters += 1
-        if iters == 10:
-            predict_index.append(np.argwhere(probas[0] == max(probas[0])))
-        elif iters % (sentence_length+1) == 0:
-            predict_index.append(np.argwhere(probas[0] == max(probas[0])))     
+        costs += cost
+        iters += m.num_steps
+        #print(np.argwhere(probas[0] == max(probas[0])))
+        if (iters + 1)%sentence_length == 0:
+            predict_index.append(np.argwhere(probas[0] == max(probas[0]))[0][0])     
     
     target_word = findlastword(test_file)
     target_index = data_loader.data_to_word_ids(target_word)
     
-    acc = len(np.intersect1d(target_index, predict_index))/len(target_index)
-    return acc
+    for i in range(len(predict_index)):
+        if predict_index[i] == target_index[i]:
+            acc += 1
+    #print("predict_index: {}".format(predict_index))
+    #print("target_index: {}".format(target_index))
+    # print("sentence_length: {}".format(sentence_length))
+    # print("num of iters: {}".format(iters))
+    return np.exp(costs / iters), (acc/ len(predict_index))
                 
-        
-    #return np.exp(costs / iters)
-    
+
 ###########################
 
 
@@ -122,7 +115,10 @@ def test(test_args):
         if ckpt and ckpt.model_checkpoint_path:
             saver.restore(sess, ckpt.model_checkpoint_path)
 
-        test_perplexity = run_epoch(sess, mtest, test_data, data_loader, tf.no_op())
+            
+        sentence_length = process_testset(test_args.test_file)
+        test_perplexity, acc = run_epoch2(sess, mtest, test_data, data_loader, tf.no_op(), test_args.test_file,sentence_length)
+        print('Test accuracy is:{}'.format(acc))
         print("Test Perplexity: %.3f" % test_perplexity)
         print("Test time: %.0f" % (time.time() - start))
         '''
@@ -138,9 +134,11 @@ def test(test_args):
         #####################
         #compute the accuracy
         '''
-        sentence_length = 10
-        acc = run_epoch2(sess, mtest, test_data, data_loader, tf.no_op(), test_args.test_file,sentence_length)
-        print('accuracy is:{}'.format(acc))
+                
+        
+        # sentence_length = process_testset(test_args.test_file)
+        # test_perplexity, acc = run_epoch2(sess, mtest, test_data, data_loader, tf.no_op(), test_args.test_file,sentence_length)
+        # print('accuracy is:{}'.format(acc))
         
 if __name__ == '__main__':
     main()

@@ -42,7 +42,8 @@ class WordLM(object):
         # ********************************************************************************
         # you can add this if using gpu
         # with tf.device(tf_device):
-        cell = cell_fn(rnn_size, forget_bias=0.0)
+        #cell = cell_fn(rnn_size, forget_bias=0.0)
+        cell = cell_fn(rnn_size)
         if is_training and args.keep_prob < 1:
             cell = tf.nn.rnn_cell.DropoutWrapper(cell, output_keep_prob=args.keep_prob)
         lm_cell = tf.nn.rnn_cell.MultiRNNCell([cell] * args.num_layers)
